@@ -7,22 +7,16 @@ def get_sneaker_details(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
         
-        print(f"Status code: {response.status_code}")
-        print(f"Content length: {len(response.text)}")
-        print(f"Title: {soup.title.string if soup.title else 'No title found'}")
-        
-        # Extract name
-        name_elem = soup.find('h1')
+        # Extract name (assuming there's a h1 with product name)
+        name_elem = soup.find('h1', attrs={'data-qa': 'product-name'})
         name = name_elem.text.strip() if name_elem else 'Name not found'
         
         # Extract price
-        price_elem = soup.find('span', string=lambda text: '€' in text if text else False)
+        price_elem = soup.find('span', attrs={'data-qa': lambda x: x and x.startswith('buy_bar_price_size_')})
         price = price_elem.text.strip() if price_elem else 'Price not found'
         
-        # Extract size
-        size_elem = soup.find('div', string=lambda text: text and text.strip().replace('.', '').isdigit())
-        size = size_elem.text.strip() if size_elem else 'Size not found'
-
+        # Extract size (if available in the same element)
+        size = price_elem['data-qa'].split('_')[-1] if price_elem else 'Size not found'
         
         return name, price, size
     except Exception as e:
@@ -37,11 +31,15 @@ snk = input('Sneaker: \n> ')
 crawl_url = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
 crawl_url.raise_for_status()
 soup = BeautifulSoup(crawl_url.text, 'lxml')
-for elems in soup.find_all('a'):
-    if snk in str(elems):
-        final_url = 'https://www.goat.com' + elems['href']
+
+for elem in soup.find_all('a'):
+    if snk.lower() in elem.text.lower():
+        final_url = 'https://www.goat.com' + elem['href']
         print(f"Found sneaker URL: {final_url}")
+        
+        # Get details from the specific sneaker page
         name, price, size = get_sneaker_details(final_url)
+        
         print(f"Name: {name}")
         print(f"Price: {price}")
         print(f"Size: {size}")
