@@ -12,7 +12,7 @@ def get_sneaker_details(url):
         name = name_elem.text.strip() if name_elem else 'Name not found'
         
         # Extract price
-        price_elem = soup.find('span', attrs={'data-qa': lambda x: x and x.startswith('buy_bar_price_size_')})
+        price_elem = soup.find('span', attrs={'data-qa': lambda x: x and x.startswith('grid_cell_product_price')})
         price = price_elem.text.strip() if price_elem else 'Price not found'
         
         # Extract size (if available in the same element)
@@ -46,3 +46,6 @@ for elem in soup.find_all('a'):
         break
 else:
     print("Sneaker not found")
+
+test = soup.find_all('span', {'class': 'LocalizedCurrency__Amount-sc-yoa0om-0 dQGXKg'})[0]
+print(f"found some ")
